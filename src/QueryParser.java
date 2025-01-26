@@ -28,7 +28,7 @@ public class QueryParser {
     }
 
     private static void extractFromClause(String sql, Query query) {
-        Pattern fromPattern = Pattern.compile("(?i)from\\s+(.*?)\\s+(left|right|inner|outer|join|where|group by|having|order by|limit|$)");
+        Pattern fromPattern = Pattern.compile("(?i)from\\s+(.*?)\\s+(left|right|inner|full|join|where|group by|having|order by|limit|$)");
         Matcher fromMatcher = fromPattern.matcher(sql);
         if (fromMatcher.find()) {
             query.setFromSources(parseSources(fromMatcher.group(1)));
@@ -46,8 +46,27 @@ public class QueryParser {
             join.setCondition(joinMatcher.group(3));
             joins.add(join);
         }
+
+        Pattern fromPattern = Pattern.compile("(?i)from\\s+(.*?)\\s+(where|group by|having|order by|limit|$)");
+        Matcher fromMatcher = fromPattern.matcher(sql);
+        if (fromMatcher.find()) {
+            String fromClause = fromMatcher.group(1);
+            String[] tables = fromClause.split("\\s*,\\s*");
+            if (tables.length > 1) {
+                for (int i = 1; i < tables.length; i++) {
+                    Join join = new Join();
+                    join.setType("CARTESIAN");
+                    join.setTable(tables[i]);
+                    join.setCondition(null);
+                    joins.add(join);
+                }
+            }
+        }
+
         query.setJoins(joins);
     }
+
+
 
     private static void extractWhereClause(String sql, Query query) {
         Pattern wherePattern = Pattern.compile("(?i)where\\s+(.*?)\\s+(group by|having|order by|limit|$)");

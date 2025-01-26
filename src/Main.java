@@ -8,6 +8,7 @@ public class Main {
                 HAVING COUNT(*) > 1 AND SUM(book.cost) > 500
                 ORDER BY author.name DESC
                 LIMIT 10
+                OFFSET 2
                 """;
 
         Query query = QueryParser.parseQuery(sql);
